@@ -12,6 +12,7 @@ from app.schemas.user import (
 from app.services.auth_service import (
     update_profile,
     change_password,
+    delete_account,
 )
 
 router = APIRouter(
@@ -50,4 +51,14 @@ def update_password(
         db,
         current_user,
         password_data,
+    )
+
+@router.delete("/me")
+def delete_me(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return delete_account(
+        db,
+        current_user,
     )

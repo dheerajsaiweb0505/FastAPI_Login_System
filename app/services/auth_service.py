@@ -12,7 +12,7 @@ from app.repositories.user_repository import (
     get_user_by_email,
     create_user,
     update_user,
-    
+    deactivate_user,
 )
 
 
@@ -45,7 +45,11 @@ def login_user(db: Session, email: str, password: str):
             status_code=401,
             detail="Invalid email or password"
         )
-
+    if not db_user.is_active:
+        raise HTTPException(
+            status_code=403,
+            detail="Account has been deactivated"
+        )
     if not verify_password(password, db_user.hashed_password):
         raise HTTPException(
             status_code=401,
@@ -127,4 +131,17 @@ def change_password(
 
     return {
         "message": "Password changed successfully"
+    }
+
+def delete_account(
+    db: Session,
+    current_user: User,
+):
+    deactivate_user(
+        db,
+        current_user,
+    )
+
+    return {
+        "message": "Account deleted successfully"
     }
