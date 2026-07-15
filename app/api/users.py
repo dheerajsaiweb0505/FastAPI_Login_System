@@ -7,8 +7,12 @@ from app.models.user import User
 from app.schemas.user import (
     UserResponse,
     UserUpdate,
+    ChangePassword,
 )
-from app.services.auth_service import update_profile
+from app.services.auth_service import (
+    update_profile,
+    change_password,
+)
 
 router = APIRouter(
     prefix="/users",
@@ -33,4 +37,17 @@ def update_me(
         db,
         current_user,
         user_data,
+    )
+
+
+@router.put("/change-password")
+def update_password(
+    password_data: ChangePassword,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return change_password(
+        db,
+        current_user,
+        password_data,
     )

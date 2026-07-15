@@ -11,6 +11,7 @@ from app.schemas.user import (
 from app.services.auth_service import (
     register_user,
     login_user,
+    change_password,
 )
 
 router = APIRouter(

@@ -2,7 +2,7 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from app.models.user import User
-from app.schemas.user import UserCreate , UserUpdate
+from app.schemas.user import UserCreate , UserUpdate ,ChangePassword
 from app.core.security import (
     hash_password,
     verify_password,
@@ -12,6 +12,7 @@ from app.repositories.user_repository import (
     get_user_by_email,
     create_user,
     update_user,
+    
 )
 
 
@@ -93,3 +94,37 @@ def update_profile(
         db,
         current_user,
     )
+
+def change_password(
+    db: Session,
+    current_user: User,
+    password_data: ChangePassword,
+):
+    # Verify current password
+    if not verify_password(
+        password_data.current_password,
+        current_user.hashed_password,
+    ):
+        raise HTTPException(
+            status_code=401,
+            detail="Current password is incorrect",
+        )
+
+    # Prevent using the same password again
+    if password_data.current_password == password_data.new_password:
+        raise HTTPException(
+            status_code=400,
+            detail="New password must be different from the current password",
+        )
+
+    # Hash the new password
+    current_user.hashed_password = hash_password(
+        password_data.new_password
+    )
+
+    # Save changes
+    update_user(db, current_user)
+
+    return {
+        "message": "Password changed successfully"
+    }
