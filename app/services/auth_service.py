@@ -2,7 +2,7 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from app.models.user import User
-from app.schemas.user import UserCreate
+from app.schemas.user import UserCreate , UserUpdate
 from app.core.security import (
     hash_password,
     verify_password,
@@ -11,6 +11,7 @@ from app.core.security import (
 from app.repositories.user_repository import (
     get_user_by_email,
     create_user,
+    update_user,
 )
 
 
@@ -58,3 +59,37 @@ def login_user(db: Session, email: str, password: str):
         "access_token": access_token,
         "token_type": "bearer"
     }
+
+def update_profile(
+    db: Session,
+    current_user: User,
+    user_data: UserUpdate,
+):
+
+    # Update username if provided
+    if user_data.username is not None:
+        current_user.username = user_data.username
+
+    # Update email if provided
+    if user_data.email is not None:
+
+        existing_user = get_user_by_email(
+            db,
+            user_data.email,
+        )
+
+        if (
+            existing_user
+            and existing_user.id != current_user.id
+        ):
+            raise HTTPException(
+                status_code=400,
+                detail="Email already exists",
+            )
+
+        current_user.email = user_data.email
+
+    return update_user(
+        db,
+        current_user,
+    )
